@@ -36,6 +36,24 @@ export class UserController {
     }
   };
 
+  static login = async (req: Request, res: Response) => {
+    const userRepository = getRepository(User);
+    const user = await userRepository.findOne({
+      where: { email: req.body.email },       
+    });
+    if (!user) {
+      return res.status(401).send({ message: 'Invalid email or password' });
+    }
+   
+    res.send({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      contact: user.contact,
+      
+    })
+  }
+
   static create = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
     const user = userRepository.create(req.body);
