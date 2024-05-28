@@ -3,6 +3,7 @@ import { getRepository } from 'typeorm';
 import { validateEmail } from '../validation/emailValidator';
 import { validatePassword } from '../validation/passwordValidator';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+const bcrypt = require('bcrypt');
 import dotenv from 'dotenv';
 import { User } from '../entities/User';
 
@@ -40,28 +41,59 @@ export class UserController {
     }
   };
 
-  static login = async (req: Request, res: Response) => {
-    console.log('log in')
+  // static login = async (req: Request, res: Response) => {
+  //   console.log('log in')
     
-    const userRepository = getRepository(User);
-    const user = await userRepository.findOne({
-      where: { email: req.body.email , password: req.body.password},       
-    });
-    console.log(user);
+  //   const userRepository = getRepository(User);
+  //   const user = await userRepository.findOne({
+  //     where: { email: req.body.email , password: req.body.password},       
+  //   });
+  //   console.log(user);
 
    
-    const [userResult] = await userRepository.find({
-      select: ["id", "name", "email", "contact"],
-    })
-    console.log(userResult) 
-    if (!user) {
-      return res.status(401).send({ message: 'Invalid email or password' });
-    }
+  //   const [userResult] = await userRepository.find({
+  //     select: ["id", "name", "email", "contact"],
+  //   })
+  //   console.log(userResult) 
+  //   if (!user) {
+  //     return res.status(401).send({ message: 'Invalid email or password' });
+  //   }
     
-      const token = jwt.sign({email: userResult.email, id: userResult.id}, process.env.JWT_SECRET as string , { expiresIn: '1h' } );
-      console.log(token)
-      res.send({...userResult, token });
-  }
+  //     const token = jwt.sign({email: userResult.email, id: userResult.id}, process.env.JWT_SECRET as string , { expiresIn: '1h' } );
+  //     console.log(token)
+  //     res.send({...userResult, token });
+  // }
+
+
+  static login = async (req: Request, res: Response) => {
+    console.log('log in');
+    const { email, password } = req.body;
+    const userRepository = getRepository(User);
+    const user = await userRepository.findOne({ where: { email } });
+    if (!user) {
+        return res.status(401).send({ message: 'Invalid email or password' });
+    }
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).send({ message: 'Invalid email or password' });
+    }
+    // Generate token
+    const token = jwt.sign(
+        { email: user.email, id: user.id },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '1h' }
+    );
+    console.log(token);
+    // Send response with minimal user info and token
+    res.send({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        contact: user.contact,
+        token
+    });
+}
 
   static create = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
