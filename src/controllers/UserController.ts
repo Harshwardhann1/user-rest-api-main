@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { getRepository } from 'typeorm';
 import { User } from '../entities/User';
-
+import { validateEmail } from '../validation/emailValidator';
+import { validatePassword } from '../validation/passwordValidator';
 export class UserController {
   /* static getAll = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
@@ -14,7 +15,6 @@ export class UserController {
 
   static getAll = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
-
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 10;
     try {
@@ -22,6 +22,7 @@ export class UserController {
       const [users, total] = await userRepository.findAndCount({
         skip: skip,
         take: pageSize,
+        select: ["id", "name", "email", "contact"]
       });
       res.send({
         page,
@@ -41,35 +42,74 @@ export class UserController {
     const user = await userRepository.findOne({
       where: { email: req.body.email },       
     });
+    const [userResult] = await userRepository.find({
+      select: ["id", "name", "email", "contact"],
+    })
     if (!user) {
       return res.status(401).send({ message: 'Invalid email or password' });
     }
    
-    res.send({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      contact: user.contact,
-      
-    })
+    res.send(userResult);
   }
 
   static create = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
-    const user = userRepository.create(req.body);
+    const { name, email, contact, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: "Email and password are required." });
+      return;
+  }
+  if (!validateEmail(email)) {
+      res.status(400).json({ error: "Invalid email address." });
+      return;
+  }
+  if (!validatePassword(password)) {
+      res.status(400).json({ error: "Password must be at least 8 characters long." });
+      return;
+  }
+    const user = userRepository.create({ name, email, contact, password });   
     const result = await userRepository.save(user);
-    res.send(result);
+    res.send({ id: result.id, 
+      name: result.name, 
+      email: result.email, 
+      contact: result.contact,
+    })
+
   };
 
-  static getById = async (req: Request, res: Response) => {
+  // static getByName = async (req: Request, res: Response) => {
+  //   const userRepository = getRepository(User);
+  //   const user = await userRepository.findOne({
+  //     where: { id : parseInt(req.params.name) },
+  //   });
+  //   const [userResult] = await userRepository.find({
+  //     select: ["id", "name", "email", "contact"],
+  //   })
+  //   if (user) {
+  //     res.send(userResult);
+  //   } else {
+  //     res.status(404).send({ message: 'User not found' });
+  //   }
+  // };
+
+  static getUsersByName = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
-    const user = await userRepository.findOne({
-      where: { id: parseInt(req.params.id) },
-    });
-    if (user) {
-      res.send(user);
-    } else {
-      res.status(404).send({ message: 'User not found' });
+  
+    try {
+      const name = req.params.name;
+      const users = await userRepository.find({
+        where: { name: name },
+        select: ["id", "name", "email", "contact"],
+      });
+  
+      if (users.length > 0) {
+        res.send(users);
+      } else {
+        res.status(404).send({ message: 'No users found with that name' });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: 'Internal Server Error' });
     }
   };
 
@@ -78,10 +118,13 @@ export class UserController {
     const user = await userRepository.findOne({
       where: { id: parseInt(req.params.id) },
     });
+    const [userResult] = await userRepository.find({
+      select: ["id", "name", "email", "contact"],
+    })
     if (user) {
       userRepository.merge(user, req.body);
       const result = await userRepository.save(user);
-      res.send(result);
+      res.send(userResult);
     } else {
       res.status(404).send({ message: 'User not found' });
     }
