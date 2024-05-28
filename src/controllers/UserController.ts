@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { getRepository } from 'typeorm';
-import { User } from '../entities/User';
 import { validateEmail } from '../validation/emailValidator';
 import { validatePassword } from '../validation/passwordValidator';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { User } from '../entities/User';
+
 export class UserController {
   /* static getAll = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
@@ -38,18 +41,26 @@ export class UserController {
   };
 
   static login = async (req: Request, res: Response) => {
+    console.log('log in')
+    
     const userRepository = getRepository(User);
     const user = await userRepository.findOne({
-      where: { email: req.body.email },       
+      where: { email: req.body.email , password: req.body.password},       
     });
+    console.log(user);
+
+   
     const [userResult] = await userRepository.find({
       select: ["id", "name", "email", "contact"],
     })
+    console.log(userResult) 
     if (!user) {
       return res.status(401).send({ message: 'Invalid email or password' });
     }
-   
-    res.send(userResult);
+    
+      const token = jwt.sign({email: userResult.email, id: userResult.id}, process.env.JWT_SECRET as string , { expiresIn: '1h' } );
+      console.log(token)
+      res.send({...userResult, token });
   }
 
   static create = async (req: Request, res: Response) => {
@@ -76,21 +87,6 @@ export class UserController {
     })
 
   };
-
-  // static getByName = async (req: Request, res: Response) => {
-  //   const userRepository = getRepository(User);
-  //   const user = await userRepository.findOne({
-  //     where: { id : parseInt(req.params.name) },
-  //   });
-  //   const [userResult] = await userRepository.find({
-  //     select: ["id", "name", "email", "contact"],
-  //   })
-  //   if (user) {
-  //     res.send(userResult);
-  //   } else {
-  //     res.status(404).send({ message: 'User not found' });
-  //   }
-  // };
 
   static getUsersByName = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
