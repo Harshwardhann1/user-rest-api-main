@@ -114,24 +114,6 @@ res.send(formattedUsers);
     });
   };
 
-  // static update = async (req: Request, res: Response) => {
-  //   const userRepository = getRepository(User);
-  //   const user = await userRepository.findOne({
-  //     where: { id: parseInt(req.params.id) },
-  //   });
-  //   const [userResult] = await userRepository.find({
-  //     select: ["id", "name", "email", "contact"],
-  //   });
-  //   if (user) {
-  //     userRepository.merge(user, req.body);
-  //     const result = await userRepository.save(user);
-  //     res.send(userResult);
-  //   } else {
-  //     res.status(404).send({ message: "User not found" });
-  //   }
-  // };
-
-
   static update = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
     const userId = req.body.id; 
