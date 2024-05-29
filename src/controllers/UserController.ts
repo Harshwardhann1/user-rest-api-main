@@ -21,7 +21,7 @@ export class UserController {
       const userRepository = getRepository(User);
 
       let query = userRepository.createQueryBuilder("user");
-console.log(filter.search);
+      console.log(filter.search);
       switch (filter.search) {
           case "name": 
             {
@@ -29,6 +29,7 @@ console.log(filter.search);
                 name: `%${filter.search}%`,
               });
             }
+            
             break;
           case "contact":
            
@@ -44,8 +45,7 @@ console.log(filter.search);
               });
             
             break;
-          default:
-            break;
+         
         }
       if (order && orderBy) {
         query = query.orderBy(`user.${orderBy}`, order);
