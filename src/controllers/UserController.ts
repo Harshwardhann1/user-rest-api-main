@@ -21,27 +21,32 @@ export class UserController {
       const userRepository = getRepository(User);
 
       let query = userRepository.createQueryBuilder("user");
-
-        switch (filter.search) {
+console.log(filter.search);
+      switch (filter.search) {
           case "name": 
-            query = query.where("user.name LIKE :name", {
-              name: `%${filter.search}%`,
-            });
+            {
+              query = query.where("user.name LIKE :name", {
+                name: `%${filter.search}%`,
+              });
+            }
             break;
-            
           case "contact":
-            query = query.where("user.contact = :contact", {
-              contact : `${filter.search}`
-            });
+           
+              query = query.where("user.contact = :contact", {
+                contact : `${filter.search}`
+              });
+            
             break;
-
           case "email":
-            query = query.where("user.email = :email", {
-              email : `${filter.search}`
-            });
+           
+              query = query.where("user.email = :email", {
+                email : `${filter.search}`
+              });
+            
+            break;
+          default:
             break;
         }
-
       if (order && orderBy) {
         query = query.orderBy(`user.${orderBy}`, order);
       }
