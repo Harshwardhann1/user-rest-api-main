@@ -13,7 +13,7 @@ export class User {
     email: string;
     
     @Column()
-    contact: string;
+    contact: number;
 
     @Column()
     password: string;
