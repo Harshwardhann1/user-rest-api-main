@@ -135,8 +135,22 @@ res.send(formattedUsers);
 
   static delete = async (req: Request, res: Response) => {
     const userRepository = getRepository(User);
+    const {id} = req.body;
+    if(!id) {
+      res.status(400).json({ error: "User ID is required." });
+      return;
+    }
+    const user = await userRepository.findOne({
+      where: { id: parseInt(id) },
+    });
+    if(!user) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+    const deleteUser = await userRepository.remove(user);
+    res.send({message: "User deleted successfully"});
+
   }
-  // static delete = async (req: Request, res: Response) => {
   //   const userRepository = getRepository(User);
   //   const user = await userRepository.findOne({
   //     where: { id: parseInt(req.params.id) },
