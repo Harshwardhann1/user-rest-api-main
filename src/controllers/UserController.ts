@@ -3,18 +3,10 @@ import { getRepository } from "typeorm";
 import { validateEmail } from "../validation/emailValidator";
 import { validatePassword } from "../validation/passwordValidator";
 import { validateContact } from "../validation/contactValidator";
-import jwt, { JwtPayload } from "jsonwebtoken";
-const bcrypt = require("bcrypt");
-import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import { User } from "../entities/User";
 
 export class UserController {
-  static getAll = async (req: Request, res: Response) => {
-    const userRepository = getRepository(User);
-    const users = await userRepository.find();
-    res.send(users);
-  };
-
   static listing = async (req: Request, res: Response) => {
     try {
       let { filter, range, sort } = req.body;
@@ -108,7 +100,6 @@ export class UserController {
         email: user.email,
         contact: user.contact,
         token
-    
       });
       
     }
@@ -130,7 +121,7 @@ export class UserController {
     if (user) {
       userRepository.merge(user, req.body);
       const result = await userRepository.save(user);
-      res.send(result);
+      res.send({id : result.id, name: result.name, email: result.email, contact: result.contact});
     } else {
       res.status(404).send({ message: "User not found" });
     }
