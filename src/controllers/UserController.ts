@@ -88,33 +88,37 @@ export class UserController {
   };
 
   static login = async (req: Request, res: Response) => {
-    console.log("log in");
     const { email, password } = req.body;
     const userRepository = getRepository(User);
     const user = await userRepository.findOne({ where: { email } });
     if (!user) {
       return res.status(401).send({ message: "Invalid email or password" });
     }
-    // Compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).send({ message: "Invalid email or password" });
+    if(password === user.password) {
+      const token = jwt.sign(
+        { email: user.email, id: user.id },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1h" }
+      );
+      console.log(token)
+      
+      res.send({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        contact: user.contact,
+        token
+    
+      });
+      
     }
+    // Compare passwords
+    // const isPasswordValid = await bcrypt.compare(password, user.password); 
+    // if (!isPasswordValid) {
+    //   return res.status(401).send({ message: "Invalid email or password" });
+    // }
     // Generate token
-    const token = jwt.sign(
-      { email: user.email, id: user.id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1h" }
-    );
-    console.log(token);
     // Send response with minimal user info and token
-    res.send({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      contact: user.contact,
-      token,
-    });
   };
 
   static update = async (req: Request, res: Response) => {
