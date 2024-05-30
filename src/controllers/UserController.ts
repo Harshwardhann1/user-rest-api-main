@@ -24,7 +24,7 @@ export class UserController {
 
       // this code is performing a search based on the filter
       query.where(
-        "user.name LIKE :keyword OR user.contact LIKE :keyword OR user.email LIKE :keyword",
+        "user.name ILIKE :keyword OR user.contact ILIKE :keyword OR user.email ILIKE :keyword",
         {
           keyword: `%${filter.search}%`, // Using filter.search as the keyword
         }
