@@ -90,6 +90,7 @@ export class UserController {
         name: result.name,
         email: result.email,
         contact: result.contact,
+        password: result.password
       });
     }
   };
